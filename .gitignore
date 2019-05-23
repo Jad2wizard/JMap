@@ -2,3 +2,4 @@ node_modules/*
 res/data/*
 .DS_Store
 .idea/*
+diff.log
