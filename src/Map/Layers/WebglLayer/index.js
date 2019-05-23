@@ -85,7 +85,7 @@ class WebGLLayer{
             else
                 render3(this.renderer, this.scene, this.camera);
         }
-    };
+    }
 
     addBox = (
         x = (Math.random() - 0.5) * this.width,
@@ -134,7 +134,7 @@ class WebGLLayer{
     handleClick(coord){
         const position = this.transformCoordToWorld(coord);
         this.addBox(...position)
-    };
+    }
 
     handleHover(){
     }

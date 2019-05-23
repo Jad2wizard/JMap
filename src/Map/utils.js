@@ -88,10 +88,10 @@ export const debounce = (func, timeout) => {
 export const lonDeltaDeg = (lon1, lon2) => {
     let res = 0;
     if(lon1 * lon2 > 0)
-         res =Math.abs(lon2 - lon1);
+        res =Math.abs(lon2 - lon1);
 
     else if(lon1 > 0)
-         res =(lon2 + 360) - lon1;
+        res =(lon2 + 360) - lon1;
 
     else if(lon2 > 0)
         res = (lon1 + 360) - lon2;

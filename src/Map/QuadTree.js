@@ -40,14 +40,14 @@ class QuadTree{
 
     }
 
-    findPoints(coord){
-        const res = [];
-        let parent = this.root;
-
-        while(parent){
-
-        }
-    }
+    // findPoints(coord){
+    //     const res = [];
+    //     let parent = this.root;
+    //
+    //     while(parent){
+    //
+    //     }
+    // }
 
     insertNode(point){
 
