@@ -5,7 +5,8 @@ import React from 'react';
 import styles from './index.less';
 import Map from './Map';
 import ScatterLayer from './Layers/WebglLayer/Scatter';
-import HeatmapLayer from './Layers/WebglLayer/Heatmap';
+// import HeatmapLayer from './Layers/WebglLayer/Heatmap';
+import AreamapLayer from './Layers/WebglLayer/Areamap';
 
 export default class extends React.Component{
 
@@ -26,7 +27,7 @@ export default class extends React.Component{
             })
         );
         this.Map.addLayer(
-            new HeatmapLayer({
+            new AreamapLayer({
                 container: this.mapDom,
                 map: this.Map
             })

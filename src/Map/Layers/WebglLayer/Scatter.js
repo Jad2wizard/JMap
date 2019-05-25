@@ -135,8 +135,9 @@ class Scatter extends BaseLayer{
             material.vertexShader = this.genVS(vertexShader, colors, sizes);
             material.fragmentShader = this.genFS(fragmentShader, colors);
 
+            console.log(formatColor(style.color));
             if(style.color)
-                material.uniforms.uColor.value = formatColor(style.color);
+                material.uniforms.uColor.value = [...formatColor(style.color), 1.0];
             if(style.size)
                 material.uniforms.uSize.value = style.size;
             if(this.camera)
@@ -177,9 +178,13 @@ class Scatter extends BaseLayer{
     };
 
     //返回当前鼠标指向的所有点
-    handleHover(mouseCoord, labels){
+    handleHover({mouseCoord, updateText}){
         const hoverPoints = this.kdTree.nearest(mouseCoord);
-        labels.push(...hoverPoints);
+        let text = '';
+        for (let l of hoverPoints)
+            text += `经纬度: ${l.coord[0]}-${l.coord[1]}<br>`;
+
+        updateText(text);
     }
 }
 

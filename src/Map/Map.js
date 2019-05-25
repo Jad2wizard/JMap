@@ -5,6 +5,7 @@ import EventEmitter from 'event-emitter';
 import OlLayer from './Layers/BaseMapLayer/OlLayer';
 import DOMLayer from './Layers/DOMLayer';
 import View from './View';
+import './preDefines';
 
 class Map{
 
@@ -113,11 +114,15 @@ class Map{
 
     handleMouseCoordUpdate = (x, y) => {
         const mouseCoord = this.getCoordinateFromPixel([x, y]);
-        const labels = [];
+        let text = '';
 
-        this.emit('mousehover', mouseCoord, labels);
+        this.emit('mousehover', {
+            mouseCoord,
+            mousePos: [x, y],
+            updateText: t => text = t
+        });
 
-        this.domLayer.render(labels, mouseCoord);
+        this.domLayer.render(text, mouseCoord);
     };
 }
 

@@ -30,7 +30,8 @@ class View {
             e.clientY
         ]);
 
-        this.map.emit('click', coord);
+        console.log(coord);
+        // this.map.emit('click', coord);
     };
 
     dragging = false;

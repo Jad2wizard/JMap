@@ -1,4 +1,3 @@
-console.log(process.env.NODE_ENV)
 if(!process.env.NODE_ENV){
     process.env.NODE_ENV = 'development';
 }
@@ -6,6 +5,7 @@ if(!process.env.NODE_ENV){
 const Koa = require('koa');
 const path = require('path');
 const fs = require('fs');
+const request = require('request-promise');
 const koaStatic = require('koa-static');
 const bodyParser = require('koa-bodyparser');
 const config = JSON.parse(fs.readFileSync('./config.json'));
@@ -51,6 +51,19 @@ app.use(bodyParser({
 app.use(koaStatic(
     path.join(__dirname , './res')
 ));
+
+//获取GeoJson请求代理
+app.use(async (ctx, next) => {
+    if(
+        ctx.method === 'GET' &&
+        ctx.request.path.startsWith('/areas/bound')
+    ){
+        const geoJson =  await request(`${config.geoJsonUrl}${ctx.url}`);
+        ctx.body = geoJson;
+    } else
+        await next();
+});
+
 
 // 初始化路由中间件
 app.use(async (ctx, next) => {

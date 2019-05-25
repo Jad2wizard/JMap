@@ -18,26 +18,22 @@ class DOMLayer{
         if(!this.map)
             throw('the map is undefined');
 
-        this.labelClone = document.createElement('div');
+        this.labelClone = document.createElement('pre');
         this.labelClone.className = styles.label;
     }
 
-    render(labels, coord){
+    render(text = '', coord){
         let labelDom = this.container.querySelector(`.${styles.label}`);
         if(labelDom)
             this.container.removeChild(labelDom);
 
-        if(labels.length > 0) {
+        if(text) {
             const pos  = this.transformCoordToScreen(coord);
-            let text = '';
-            for (let l of labels)
-                text += `经纬度: ${l.coord[0]}-${l.coord[1]}<br>`;
-
             labelDom = this.labelClone.cloneNode(true);
             labelDom.innerHTML = text;
             labelDom.style.left = pos[0] + 'px';
             labelDom.style.top = pos[1] + 'px';
-            labelDom.style.transform = 'translateX(-50%) translateY(-100%)';
+            labelDom.style.transform = 'translateX(-50%) translateY(-150%)';
             this.container.appendChild(labelDom);
         }
     }

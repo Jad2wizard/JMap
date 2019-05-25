@@ -145,8 +145,8 @@ export const randomOrderArr = (arr) => {
     return res;
 };
 
-export const EXTENT = [120, 30.15, 120.3, 30.35];
-// export const EXTENT = [73.3, 3.5, 135.3, 53.4];
+// export const EXTENT = [119, 29, 121, 31];
+export const EXTENT = [73.3, 3.5, 135.3, 53.4];
 
 export const numToColor = (num) => {
     const r = ( num & 0xff0000 ) >> 16;
@@ -156,7 +156,6 @@ export const numToColor = (num) => {
         r / 255,
         g / 255,
         b / 255,
-        1.0
     ];
 }
 
@@ -168,19 +167,29 @@ export const formatColor = (color) => {
             return numToColor(
                 color.replace('#', '0x')
             );
-        case 'array':{
-            let res = color.slice();
-
-            if(res.some(i => i > 1))
-                res = res.map(i => i / 255);
-            if(res.length == 3)
-                res = [...res, 1.0];
-            return res;
+        case 'object':{
+            if(Array.isArray(color)) {
+                let res = color.slice();
+                if (res.some(i => i > 1))
+                    res = res.map(i => i / 255);
+                return res;
+            }
+            return [0, 0, 0];
         }
         default:
-            return [0, 0, 0, 1.0];
+            return [0, 0, 0];
     }
 }
 
-export const genGeoJsonPath = (code, full = false) => `/data/${code}${full ? '_full' : ''}.json`;
+export const genGeoJsonPath = (code, full = false) =>
+    `/areas/bound/${code}${full ? '_full' : ''}.json`;
 
+export const _fetch = (url) => {
+    return fetch(url, {
+        method: 'GET',
+        headers: {
+            'Access-Control-Allow-Origin': '*'
+        },
+        mode: 'cors'
+    }).then(res => res.json());
+};
