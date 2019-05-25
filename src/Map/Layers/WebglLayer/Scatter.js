@@ -135,7 +135,6 @@ class Scatter extends BaseLayer{
             material.vertexShader = this.genVS(vertexShader, colors, sizes);
             material.fragmentShader = this.genFS(fragmentShader, colors);
 
-            console.log(formatColor(style.color));
             if(style.color)
                 material.uniforms.uColor.value = [...formatColor(style.color), 1.0];
             if(style.size)

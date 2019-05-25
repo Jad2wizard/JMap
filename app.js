@@ -9,10 +9,10 @@ const request = require('request-promise');
 const koaStatic = require('koa-static');
 const bodyParser = require('koa-bodyparser');
 const config = JSON.parse(fs.readFileSync('./config.json'));
+
 const app = new Koa();
-
-
 const NODE_ENV = process.env.NODE_ENV;
+const tilePath = path.resolve(__dirname, './res/img/tiles');
 
 // 配置热加载
 if(NODE_ENV == 'development' && config.hotUpdate) {
@@ -67,13 +67,10 @@ app.use(async (ctx, next) => {
 
 // 初始化路由中间件
 app.use(async (ctx, next) => {
-    if(ctx.method === 'GET' && ctx.request.path.includes('daping/tiles')){
+    if(ctx.method === 'GET' && ctx.request.path.includes('img/tiles'))
         await getTile(ctx);
-    } else if(ctx.method === 'POST' && ctx.request.path.includes('tile')){
-        await postTile(ctx);
-    }
-
-    await next();
+    else
+        await next();
 });
 
 app.use(async (ctx) => {
@@ -84,20 +81,12 @@ app.use(async (ctx) => {
 app.listen(config.port);
 console.log(`Listening on ${config.port}...`);
 
-const postTile = async (ctx) => {
+const postTile = (filename, tileData) => {
     try {
-        const filename = ctx.request.body.filename;
-        const data = ctx.request.body.data;
-        const dataBuffer = new Buffer(data, 'base64');
-        const tileFile = path.resolve(TILE_PATH, filename);
-        if (fs.existsSync(tileFile)) {
-            fs.unlinkSync(tileFile);
-        }
-        fs.writeFileSync(tileFile, dataBuffer);
-        ctx.body = '1'
+        const tileFile = path.resolve(tilePath, filename);
+        fs.writeFileSync(tileFile, tileData);
     }catch(error){
         console.error(error);
-        ctx.throw(500);
     }
 };
 
@@ -105,13 +94,32 @@ const getTile = async ctx => {
     try{
         const reqPath = ctx.request.path;
         ctx.type = 'image/png';
-        const zxy = reqPath.match(/([^\/]+)$/g)[0].match(/.*(?=\.png)/g)[0].split('_');
-        const tileFile = path.resolve(TILE_PATH, `${zxy.join('_')}.png`);
-        if(fs.existsSync(tileFile)){
-            ctx.body = fs.createReadStream(tileFile);
-        } else {
-            ctx.throw(404);
-        }
+        const [z, x, y] = reqPath.match(/([^\/]+)$/g)[0].match(/.*(?=\.png)/g)[0].split('_');
+        const tileUrl = config.tileUrlTemplate
+            .replace('{z}', z)
+            .replace('{x}', x)
+            .replace('{y}', y);
+
+        const res = await request({
+            url: tileUrl,
+            method: 'GET',
+            encoding: null,
+            headers: {
+                "Content-type": 'image/png'
+            }
+        }).then((body) => {
+            const writeStream = fs.createWriteStream(
+                path.resolve(tilePath, `${z}_${x}_${y}.png`)
+            );
+            writeStream.write(body, 'binary');
+            writeStream.end();
+            return body;
+        });
+
+        ctx.body = res;
+        ctx.response.type = 'image/png';
+
+
     }catch (e){
         if(ctx.status) ctx.throw(ctx.status);
         console.log(e);

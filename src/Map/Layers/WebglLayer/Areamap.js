@@ -52,7 +52,6 @@ class Areamap extends Base{
 
     async render(data = mockData, style = mockStyle){
         console.log(style);
-
         this.zoneList = [];
         const maxValue = Math.max(...data.map(i => i.value || 1));
         const minValue = Math.min(...data.map(i => i.value || 0));

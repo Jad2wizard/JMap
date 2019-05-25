@@ -64,7 +64,7 @@ class WebGLLayer{
             scene: this.scene,
             canvas,
             clearColor: 0xffffff,
-            alpha: .2,
+            alpha: .05,
             clientWidth: this.width,
             clientHeight: this.height,
         })

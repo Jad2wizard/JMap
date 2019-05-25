@@ -62,7 +62,8 @@ class OlLayer{
     genGeoLayer = () => {
         const layer = new TileLayer({
             source: new XYZ({
-                url: 'https://api.mapbox.com/styles/v1/doudoulaiye/cj8smxtzfbjx22rs5nwfb7srz/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZG91ZG91bGFpeWUiLCJhIjoiY2oxazN0MTd6MDIxazJxcGptcjhkMGNiYSJ9.N1TxfoQ-kKfKJkGuQ7F42Q'
+                // url: 'https://api.mapbox.com/styles/v1/doudoulaiye/cj8smxtzfbjx22rs5nwfb7srz/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZG91ZG91bGFpeWUiLCJhIjoiY2oxazN0MTd6MDIxazJxcGptcjhkMGNiYSJ9.N1TxfoQ-kKfKJkGuQ7F42Q'
+                url: 'http://localhost:3001/img/tiles/{z}_{x}_{y}.png'
             })
         })
 

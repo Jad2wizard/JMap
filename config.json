@@ -1,5 +1,6 @@
 {
   "hotUpdate": true,
   "port": 3001,
-  "geoJsonUrl": "https://geo.datav.aliyun.com"
+  "geoJsonUrl": "https://geo.datav.aliyun.com",
+  "tileUrlTemplate": "https://api.mapbox.com/styles/v1/doudoulaiye/cj8smxtzfbjx22rs5nwfb7srz/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiZG91ZG91bGFpeWUiLCJhIjoiY2oxazN0MTd6MDIxazJxcGptcjhkMGNiYSJ9.N1TxfoQ-kKfKJkGuQ7F42Q"
 }
