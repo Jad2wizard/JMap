@@ -12,7 +12,20 @@ const config = JSON.parse(fs.readFileSync('./config.json'));
 
 const app = new Koa();
 const NODE_ENV = process.env.NODE_ENV;
+
+// create geoData folder and tiles folder
+const geoDataPath = path.resolve(__dirname, './res/data');
+const imgPath = path.resolve(__dirname, './res/img');
 const tilePath = path.resolve(__dirname, './res/img/tiles');
+if(!fs.existsSync(geoDataPath)){
+    fs.mkdirSync(geoDataPath);
+}
+if(!fs.existsSync(imgPath)){
+    fs.mkdirSync(imgPath);
+}
+if(!fs.existsSync(tilePath)){
+    fs.mkdirSync(tilePath);
+}
 
 // 配置热加载
 if(NODE_ENV == 'development' && config.hotUpdate) {
@@ -58,8 +71,26 @@ app.use(async (ctx, next) => {
         ctx.method === 'GET' &&
         ctx.request.path.startsWith('/areas/bound')
     ){
-        const geoJson =  await request(`${config.geoJsonUrl}${ctx.url}`);
-        ctx.body = geoJson;
+        const tmp = ctx.url.split('/');
+        const filename = tmp[tmp.length - 1];
+        const res = await request({
+            url: `${config.geoJsonUrl}${ctx.url}`,
+            method: 'GET',
+            encoding: null,
+            headers: {
+                "Content-type": 'text/plain'
+            }
+        }).then((body) => {
+            const writeStream = fs.createWriteStream(
+                path.resolve(geoDataPath, filename)
+            );
+            writeStream.write(body, 'binary');
+            writeStream.end();
+            return body;
+        });
+
+        ctx.body = res;
+        ctx.response.type = 'text/plain';
     } else
         await next();
 });
@@ -118,7 +149,6 @@ const getTile = async ctx => {
 
         ctx.body = res;
         ctx.response.type = 'image/png';
-
 
     }catch (e){
         if(ctx.status) ctx.throw(ctx.status);

@@ -65,17 +65,23 @@ class Areamap extends Base{
                 material.needsUpdate = true;
 
                 const res = await _fetch(genGeoJsonPath(zone.adcode));
+                const shapeList = [];
                 const geoData = res.features[0];
-                const pts = [];
-                for(let p of geoData.geometry.coordinates[0]){
-                    pts.push(
-                        new THREE.Vector2(...this.transformCoordToWorld(p))
-                    )
+                for(let coordArr of geoData.geometry.coordinates){
+                    const pts = [];
+                    for(let p of coordArr){
+                        pts.push(
+                            new THREE.Vector2(...this.transformCoordToWorld(p))
+                        )
+                    }
+                    shapeList.push(
+                        new THREE.Shape(pts)
+                    );
                 }
 
                 const zoneMesh = new THREE.Mesh(
                     new THREE.ShapeBufferGeometry(
-                        new THREE.Shape(pts)
+                        shapeList
                     ),
                     material
                 );
@@ -154,57 +160,104 @@ export default Areamap;
 
 var mockData = [
     {
-        adcode: 330102,
+        adcode: 330100,
         value: Math.random()
     },
     {
-        adcode: 330103,
+        adcode: 330200,
         value: Math.random()
     },
     {
-        adcode: 330104,
+        adcode: 330300,
         value: Math.random()
     },
     {
-        adcode: 330105,
+        adcode: 330400,
         value: Math.random()
     },
     {
-        adcode: 330106,
+        adcode: 330500,
         value: Math.random()
     },
     {
-        adcode: 330108,
+        adcode: 330600,
         value: Math.random()
     },
     {
-        adcode: 330109,
+        adcode: 330700,
         value: Math.random()
     },
     {
-        adcode: 330110,
+        adcode: 330800,
         value: Math.random()
     },
     {
-        adcode: 330111,
+        adcode: 330900,
         value: Math.random()
     },
     {
-        adcode: 330122,
+        adcode: 331000,
         value: Math.random()
     },
     {
-        adcode: 330127,
-        value: Math.random()
-    },
-    {
-        adcode: 330182,
-        value: Math.random()
-    },
-    {
-        adcode: 330185,
+        adcode: 331100,
         value: Math.random()
     },
 ];
+
+// var mockDataHZ = [
+//     {
+//         adcode: 330102,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330103,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330104,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330105,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330106,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330108,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330109,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330110,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330111,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330122,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330127,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330182,
+//         value: Math.random()
+//     },
+//     {
+//         adcode: 330185,
+//         value: Math.random()
+//     },
+// ];
 
 var mockStyle = {colorRange: []};
