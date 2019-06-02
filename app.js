@@ -138,6 +138,7 @@ const postTile = (filename, tileData) => {
 const getTile = async ctx => {
     try {
         const reqPath = ctx.request.path
+        console.log(reqPath);
         ctx.type = 'image/png'
         const [z, x, y] = reqPath
             .match(/([^\/]+)$/g)[0]

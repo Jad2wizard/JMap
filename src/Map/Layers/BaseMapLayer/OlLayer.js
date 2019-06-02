@@ -74,8 +74,8 @@ class OlLayer{
         this.map = new Map({
             interactions: [],
             view: new View({
-                center: [119.536, 29.609],
-                zoom: 8,
+                center: [120.1459, 30.2200],
+                zoom: 13,
                 minZoom: 1,
                 maxZoom: 19,
                 projection: 'EPSG:4326'

@@ -83,22 +83,65 @@ export const fragmentShader = `
     float calcHeatValue( vec2 pointCoord){
     
         #ifdef SAME_VALUE
-            float value = 0.2;
+            float value = 0.1;
         #else
             float value = (vValue - uMin) / (uMax - uMin);
         #endif
         
         float dist = _distance(pointCoord);
-        float blur = clamp( 1.0 - uBlurFactor, 0.0, 0.999 );
-        // float blur = 0.0;
         
         if(dist > 1.0){
             discard;
         }
         
-        return value * clamp( ( 1.0 - dist ) / ( 1.0 - blur ), 0.0, 1.0 );
+        return value * clamp( ( 1.0 - dist ) / uBlurFactor, 0.0, 1.0 );
     }
 `;
+
+export const GaussianPass = {
+    uniforms: {
+        tDiffuse: {value: null},
+        uResolution: {
+            type: 'vec2',
+            value: [1, 1]
+        }
+    },
+    vertexShader: `
+        varying vec2 vUV;
+        
+        void main(){
+        
+            vUV = uv;
+            
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+        }
+    `,
+    fragmentShader: `
+        precision mediump float;
+        
+        uniform sampler2D tDiffuse;
+        uniform vec2 uResolution;
+        
+        varying vec2 vUV;
+        
+        void main(){
+            float dx = 1.0 / uResolution.x;
+            float dy = 1.0 / uResolution.y;
+            
+            vec4 c11 = texture2D(tDiffuse, vUV - vec2(1.0 * dx, 1.0 * dy)) * 0.02748805872886607;
+            vec4 c12 = texture2D(tDiffuse, vUV - vec2(0.0 * dx, 1.0 * dy)) * 0.11023787943830274;
+            vec4 c13 = texture2D(tDiffuse, vUV - vec2(-1.0 * dx, 1.0 * dy)) * 0.02748805872886607;
+            vec4 c21 = texture2D(tDiffuse, vUV - vec2(1.0 * dx, 0.0 * dy)) * 0.11023787943830274;
+            vec4 c22 = texture2D(tDiffuse, vUV - vec2(0.0 * dx, 0.0 * dy)) * 0.44209706414415373;
+            vec4 c23 = texture2D(tDiffuse, vUV - vec2(-1.0 * dx, 0.0 * dy)) * 0.11023787943830274;
+            vec4 c31 = texture2D(tDiffuse, vUV - vec2(1.0 * dx, -1.0 * dy)) * 0.02748805872886607;
+            vec4 c32 = texture2D(tDiffuse, vUV - vec2(0.0 * dx, -1.0 * dy)) * 0.11023787943830274;
+            vec4 c33 = texture2D(tDiffuse, vUV - vec2(-1.0 * dx, -1.0 * dy)) * 0.02748805872886607;
+            
+            gl_FragColor = c11 + c12 + c13 + c21 + c22 + c23 + c31 + c32 + c33;
+        }
+    `
+};
 
 export const RTTShaderPass = {
     uniforms: {

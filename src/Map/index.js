@@ -1,11 +1,12 @@
 /**
  * Created by yaojia7 on 2019/4/16.
  */
+/* eslint-disable */
 import React from 'react';
 import styles from './index.less';
 import Map from './Map';
 import ScatterLayer from './Layers/WebglLayer/Scatter';
-// import HeatmapLayer from './Layers/WebglLayer/Heatmap';
+import HeatmapLayer from './Layers/WebglLayer/Heatmap';
 import AreamapLayer from './Layers/WebglLayer/Areamap';
 
 export default class extends React.Component{
@@ -20,14 +21,14 @@ export default class extends React.Component{
             target: this.mapDom,
             ref: this
         });
+        // this.Map.addLayer(
+        //     new ScatterLayer({
+        //         container: this.mapDom,
+        //         map: this.Map
+        //     })
+        // );
         this.Map.addLayer(
-            new ScatterLayer({
-                container: this.mapDom,
-                map: this.Map
-            })
-        );
-        this.Map.addLayer(
-            new AreamapLayer({
+            new HeatmapLayer({
                 container: this.mapDom,
                 map: this.Map
             })
@@ -47,3 +48,4 @@ export default class extends React.Component{
     }
 }
 
+/* eslint-enable */
