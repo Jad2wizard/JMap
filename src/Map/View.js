@@ -30,8 +30,7 @@ class View {
             e.clientY
         ]);
 
-        console.log(coord);
-        // this.map.emit('click', coord);
+        this.map.emit('click', coord);
     };
 
     dragging = false;
@@ -110,11 +109,10 @@ class View {
 
         const deltaY = e.deltaY / Math.abs(e.deltaY);
 
-        this.map.setZoom(
-            zoom *
-            this.getZoomScale(deltaY)
+        this.map.emit(
+            'zoom',
+            zoom * this.getZoomScale(deltaY)
         );
-        this.map.emit('viewChange', this.map.getExtent());
 
         this.prevDeltaY = deltaY;
         this.prevTime = time;

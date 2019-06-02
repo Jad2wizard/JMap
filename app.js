@@ -67,32 +67,6 @@ app.use(
 //静态路由中间件
 app.use(koaStatic(path.join(__dirname, './res')))
 
-//获取GeoJson请求代理
-app.use(async (ctx, next) => {
-    if (ctx.method === 'GET' && ctx.request.path.startsWith('/areas/bound')) {
-        const tmp = ctx.url.split('/')
-        const filename = tmp[tmp.length - 1]
-        const res = await request({
-            url: `${config.geoJsonUrl}${ctx.url}`,
-            method: 'GET',
-            encoding: null,
-            headers: {
-                'Content-type': 'text/plain'
-            }
-        }).then(body => {
-            const writeStream = fs.createWriteStream(
-                path.resolve(geoDataPath, filename)
-            )
-            writeStream.write(body, 'binary')
-            writeStream.end()
-            return body
-        })
-
-        ctx.body = res
-        ctx.response.type = 'text/plain'
-    } else await next()
-})
-
 app.use(async (ctx, next) => {
     if (ctx.method === 'GET' && ctx.request.path.includes('/zone/')) {
         await getZoneData(ctx)
@@ -119,7 +93,6 @@ console.log(`Listening on ${config.port}...`)
 const getZoneData = async ctx => {
     try {
         const adcode = ctx.request.path.split('zone/')[1]
-        console.log(adcode)
         ctx.body = await find(adcode)
     } catch (e) {
         ctx.throw(e.toString())

@@ -5,15 +5,22 @@
 import THREE from './../../../three'
 import Base from './index'
 import { vertexShader, fragmentShader } from './shaders/Areamap'
-import { genGeoJsonPath, formatColor, _fetch } from './../../utils'
+import { genGeoJsonPath, formatColor } from './../../utils'
 import { fade, smoothstep } from './../../Math'
 
 window.three = THREE
 class Areamap extends Base {
     constructor(props) {
         super(props)
-        this.zoneList = []
         this.hoverZone = null //鼠标悬浮的区域Mesh
+
+        this.areaList = new THREE.Group()
+        this.zoneCentroidList = new THREE.Group()
+
+        this.lastRenderZoom = 0 //最近一次render时，fit extent时的zoom
+        this.initZoom = 1
+
+        this.resetExtent()
     }
 
     init() {
@@ -38,11 +45,15 @@ class Areamap extends Base {
         })
         this.material.transparent = true
         this.material.extensions.derivatives = true
+
+        this.scene.add(this.areaList)
+        this.scene.add(this.zoneCentroidList)
+        this.initZoom = this.camera.zoom
     }
 
-    async render(data = mockData, style = mockStyle) {
-        console.log(style)
-        this.zoneList = []
+    async render(data = mockData) {
+        this.resetExtent()
+        this.clearAreas()
         const maxValue = Math.max(...data.map(i => i.value || 1))
         const minValue = Math.min(...data.map(i => i.value || 0))
 
@@ -51,19 +62,31 @@ class Areamap extends Base {
                 const value = zone.value
                     ? (zone.value - minValue) / (maxValue - minValue)
                     : 1
-                const material = this.material.clone()
+
                 const color = this.getColor(value)
+                const material = this.material.clone()
                 material.uniforms.uColor.value = color
                 material.needsUpdate = true
 
-                const res = await _fetch(genGeoJsonPath(zone.adcode))
+                const zoneData = await fetch(genGeoJsonPath(zone.adcode)).then(
+                    res => res.json()
+                )
+
+                let coordinates = zoneData.coordinates
                 const shapeList = []
-                const geoData = res.features[0]
-                for (let coordArr of geoData.geometry.coordinates) {
+
+                if (zoneData.geoType === 'MultiPolygon') {
+                    coordinates = coordinates.map(polygon => polygon[0])
+                }
+                for (let coordArr of coordinates) {
                     const pts = []
                     for (let p of coordArr) {
+                        this.updateExtent(p)
+
                         pts.push(
-                            new THREE.Vector2(...this.transformCoordToWorld(p))
+                            new THREE.Vector2(
+                                ...this.transformCoordToWorld(p).slice(0, 2)
+                            )
                         )
                     }
                     shapeList.push(new THREE.Shape(pts))
@@ -74,25 +97,101 @@ class Areamap extends Base {
                     material
                 )
                 zoneMesh.adcode = zone.adcode
-                zoneMesh.name = geoData.properties.name
-                zoneMesh.value = zone.value
-                zoneMesh.level = geoData.properties.level
-                zoneMesh.zoneCenter = geoData.properties.center
-                this.zoneList.push(zoneMesh)
-                this.scene.add(zoneMesh)
+                zoneMesh.name = zoneData.name
+                zoneMesh.level = zoneData.level
+                zoneMesh.zoneCenter = zoneData.center
+                if (zone.value) zoneMesh.value = zone.value
+                this.areaList.add(zoneMesh)
+
+                //center point
+                if (zoneData.centroid.length == 2) {
+                    const centralPos = this.transformCoordToWorld(
+                        zoneData.centroid
+                    )
+                    const circle = new THREE.Mesh(
+                        new THREE.CircleGeometry(3, 32),
+                        new THREE.MeshBasicMaterial({ color: '#4e4e4e' })
+                    )
+                    circle.position.x = centralPos[0]
+                    circle.position.y = centralPos[1]
+                    circle.position.z = 1.0
+                    circle.frustumCulled = false
+                    this.zoneCentroidList.add(circle)
+                }
+            }
+        }
+
+        this.fitExtent()
+    }
+
+    fitExtent() {
+        this.map
+            .setExtent([this.west, this.south, this.east, this.north])
+            .then(() => {
+                this.lastRenderZoom = this.map.getZoom()
+
+                //根据zoom调整center点大小
+                for (let zc of this.zoneCentroidList.children) {
+                    const scaleRatio = this.initZoom / this.camera.zoom
+                    zc.scale.x = scaleRatio
+                    zc.scale.y = scaleRatio
+                }
+            })
+    }
+
+    resetExtent() {
+        //当前显示区域点边界
+        this.west = 180
+        this.east = -180
+        this.north = -90
+        this.south = 90
+    }
+
+    updateExtent(p) {
+        if (p[0] < this.west) this.west = p[0]
+        if (p[0] > this.east) this.east = p[0]
+        if (p[1] < this.south) this.south = p[1]
+        if (p[1] > this.north) this.north = p[1]
+    }
+
+    clearAreas() {
+        const areas = this.areaList.children.slice()
+        for (let a of areas) this.areaList.remove(a)
+
+        const centroids = this.zoneCentroidList.children.slice()
+        for (let c of centroids) this.zoneCentroidList.remove(c)
+    }
+
+    clickHandling = false
+    async handleClick(coord) {
+        if (this.clickHandling) return
+
+        const intersections = this.getObjsAtCoord(coord, this.areaList)
+        if (intersections && intersections.length > 0) {
+            const zone = intersections[0].object
+            //非区级行政区域可以展开
+            if (zone.level !== 'district') {
+                this.clickHandling = true
+
+                const data = await fetch(genGeoJsonPath(zone.adcode)).then(
+                    res => res.json()
+                )
+                const res = []
+                for (let code of data.children) {
+                    res.push({
+                        adcode: code,
+                        value: Math.random()
+                    })
+                }
+                await this.render(res)
+                this.clickHandling = false
             }
         }
     }
 
-    handleHover({ mousePos, updateText }) {
-        const [x, y] = mousePos
-        const vector = {
-            x: 2 * (x / this.width) - 1,
-            y: -2 * (y / this.height) + 1
-        }
-        const rayCaster = new THREE.Raycaster()
-        rayCaster.setFromCamera(vector, this.camera)
-        const intersects = rayCaster.intersectObjects(this.scene.children)
+    handleHover({ mouseCoord, updateText }) {
+        const intersects = this.getObjsAtCoord(mouseCoord, this.areaList)
+
         if (intersects && intersects.length > 0) {
             const obj = intersects[0].object
             updateText(`${obj.name}\n${obj.value}`)
@@ -113,6 +212,49 @@ class Areamap extends Base {
         }
     }
 
+    zoomHandling = false
+    async handleZoom() {
+        const zoom = this.map.getZoom()
+        const firstAreaMesh = this.areaList.children[0]
+        const level = firstAreaMesh.level
+        //上卷操作
+        if (
+            (level === 'district' && this.lastRenderZoom - zoom > 1) ||
+            (level === 'city' && this.lastRenderZoom - zoom > 1.5)
+        ) {
+            if (this.zoomHandling) return
+
+            this.zoomHandling = true
+
+            const firstZoneData = await fetch(
+                genGeoJsonPath(firstAreaMesh.adcode)
+            ).then(res => res.json())
+
+            const data = await fetch(
+                genGeoJsonPath(
+                    firstZoneData.acroutes[firstZoneData.acroutes.length - 2]
+                )
+            ).then(res => res.json())
+
+            const res = []
+            for (let code of data.children) {
+                res.push({
+                    adcode: code,
+                    value: Math.random()
+                })
+            }
+            await this.render(res)
+            this.zoomHandling = false
+        }
+
+        //根据zoom调整center点大小
+        for (let zc of this.zoneCentroidList.children) {
+            const scaleRatio = this.initZoom / this.camera.zoom
+            zc.scale.x = scaleRatio
+            zc.scale.y = scaleRatio
+        }
+    }
+
     addHover(material) {
         material.vertextShader = '#define HOVER\n' + vertexShader
         material.fragmentShader = '#define HOVER\n' + fragmentShader
@@ -124,11 +266,12 @@ class Areamap extends Base {
     }
 
     getColor(value) {
-        const c1 = formatColor(0xff4600)
-        const c2 = formatColor(0xffa100)
+        const c1 = formatColor(0x87cef9)
+        const c2 = formatColor(0xc9e971)
         const c3 = formatColor(0xfefe00)
-        const c4 = formatColor(0xc9e971)
-        const c5 = formatColor(0x87cef9)
+        const c4 = formatColor(0xffa100)
+        const c5 = formatColor(0xff4600)
+
         const f1 = fade(-0.25, 0.25, value)
         const f2 = fade(0, 0.5, value)
         const f3 = fade(0.25, 0.75, value)
@@ -194,59 +337,4 @@ var mockData = [
     }
 ]
 
-// var mockDataHZ = [
-//     {
-//         adcode: 330102,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330103,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330104,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330105,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330106,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330108,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330109,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330110,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330111,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330122,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330127,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330182,
-//         value: Math.random()
-//     },
-//     {
-//         adcode: 330185,
-//         value: Math.random()
-//     },
-// ];
-
-var mockStyle = { colorRange: [] }
+// var mockStyle = { colorRange: [] }

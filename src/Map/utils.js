@@ -181,8 +181,7 @@ export const formatColor = (color) => {
     }
 }
 
-export const genGeoJsonPath = (code, full = false) =>
-    `/areas/bound/${code}${full ? '_full' : ''}.json`;
+export const genGeoJsonPath = code => `/zone/${code}`;
 
 export const _fetch = (url) => {
     return fetch(url, {

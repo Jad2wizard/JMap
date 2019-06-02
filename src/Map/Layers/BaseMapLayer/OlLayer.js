@@ -20,6 +20,9 @@ class OlLayer{
         this.target = props.target;
         this.postrenderCallback = props.postrenderCallback;
 
+        this.center = props.center;
+        this.zoom = props.zoom;
+
         this.map = null;
         this.view = null;
 
@@ -74,14 +77,14 @@ class OlLayer{
         this.map = new Map({
             interactions: [],
             view: new View({
-                center: [120.1459, 30.2200],
-                zoom: 13,
-                minZoom: 1,
+                center: this.center,
+                zoom: this.zoom,
+                minZoom: 4,
                 maxZoom: 19,
                 projection: 'EPSG:4326'
             }),
             target: this.target,
-            layers: [],
+            layers: [ this.genGeoLayer() ],
         });
         this.map;
 
@@ -94,11 +97,6 @@ class OlLayer{
         this.once = this.map.once.bind(this.map);
 
         this.map.once('postrender', async () => {
-
-            this.map.addLayer(
-                this.genGeoLayer()
-            );
-
             //该回调中，frameState.pixelToCoordinateTransform 中存在NaN分量，
             //导致 getCoordinateFromPixel返回NaN。
             //故人为等半秒

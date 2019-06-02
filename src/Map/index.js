@@ -19,6 +19,10 @@ export default class extends React.Component{
     componentDidMount(){
         this.Map = new Map({
             target: this.mapDom,
+            center: [120.134913671875, 28.8082568359375],
+            // center: [120.1459, 30.2200],
+            zoom: 7.6,
+            // zoom: 13,
             ref: this
         });
         // this.Map.addLayer(
@@ -28,7 +32,7 @@ export default class extends React.Component{
         //     })
         // );
         this.Map.addLayer(
-            new HeatmapLayer({
+            new AreamapLayer({
                 container: this.mapDom,
                 map: this.Map
             })
