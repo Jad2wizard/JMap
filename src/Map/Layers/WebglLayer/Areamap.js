@@ -57,6 +57,8 @@ class Areamap extends Base {
         const maxValue = Math.max(...data.map(i => i.value || 1))
         const minValue = Math.min(...data.map(i => i.value || 0))
 
+        const nameCoordList = []
+
         for (let zone of data) {
             if (zone.adcode) {
                 const value = zone.value
@@ -105,6 +107,11 @@ class Areamap extends Base {
 
                 //center point
                 if (zoneData.centroid.length == 2) {
+                    nameCoordList.push({
+                        name: zoneData.name,
+                        coord: zoneData.centroid
+                    })
+
                     const centralPos = this.transformCoordToWorld(
                         zoneData.centroid
                     )
@@ -121,7 +128,9 @@ class Areamap extends Base {
             }
         }
 
-        this.fitExtent()
+        if (data.length > 0) this.fitExtent()
+
+        this.map.renderAreaNames(nameCoordList)
     }
 
     fitExtent() {
@@ -183,7 +192,8 @@ class Areamap extends Base {
                         value: Math.random()
                     })
                 }
-                await this.render(res)
+
+                if (res.length > 0) await this.render(res)
                 this.clickHandling = false
             }
         }
@@ -243,7 +253,8 @@ class Areamap extends Base {
                     value: Math.random()
                 })
             }
-            await this.render(res)
+
+            if (res.length > 0) await this.render(res)
             this.zoomHandling = false
         }
 

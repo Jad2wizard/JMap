@@ -1,61 +1,74 @@
 /**
  * Created by yaojia7 on 2019/5/8.
  */
-import {lonDeltaDeg} from '../../utils';
-import styles from './index.less';
+import styles from './index.less'
 
-class DOMLayer{
+class DOMLayer {
+    constructor(props) {
+        this.width = props.width || window.innerWidth
+        this.height = props.height || window.innerHeight
 
-    constructor(props){
-        this.width = props.width || window.innerWidth;
-        this.height = props.height || window.innerHeight;
+        this.container = props.container
+        if (!this.container) throw 'the container dom is undefined'
 
-        this.container = props.container;
-        if(!this.container)
-            throw('the container dom is undefined');
+        this.map = props.map
+        if (!this.map) throw 'the map is undefined'
 
-        this.map = props.map;
-        if(!this.map)
-            throw('the map is undefined');
+        this.labelClone = document.createElement('pre')
+        this.labelClone.className = styles.label
 
-        this.labelClone = document.createElement('pre');
-        this.labelClone.className = styles.label;
+        this.areaNameClone = document.createElement('span')
+        this.areaNameClone.className = styles.areaName
+        //manage the area name DOM of the areamap
+        this.areaNameList = [
+            /**
+             * name: '',
+             * coord: [],
+             * dom: DOM
+             */
+        ]
+
+        this.animate()
     }
 
-    render(text = '', coord){
-        let labelDom = this.container.querySelector(`.${styles.label}`);
-        if(labelDom)
-            this.container.removeChild(labelDom);
-
-        if(text) {
-            const pos  = this.transformCoordToScreen(coord);
-            labelDom = this.labelClone.cloneNode(true);
-            labelDom.innerHTML = text;
-            labelDom.style.left = pos[0] + 'px';
-            labelDom.style.top = pos[1] + 'px';
-            labelDom.style.transform = 'translateX(-50%) translateY(-150%)';
-            this.container.appendChild(labelDom);
+    animate = () => {
+        requestAnimationFrame(this.animate)
+        for (let area of this.areaNameList) {
+            const pos = this.map.transformCoordToPixel(area.coord)
+            const areaNameDom = area.dom
+            if (areaNameDom) {
+                areaNameDom.style.left = pos[0] + 'px'
+                areaNameDom.style.top = pos[1] + 'px'
+            }
         }
     }
 
-    transformCoordToScreen = (coord) => {
-        const screen = [0, 0];
-        const extent = this.map.getExtent();
-        try {
-            const coordWidth = lonDeltaDeg(extent[0], extent[2]);
-            const coordHeight = Math.abs(extent[1] - extent[3]);
-            const {width, height} = this;
+    renderAreaNames(areaList = []) {
+        const areaNameDomList = document.querySelectorAll(`.${styles.areaName}`)
+        for (let a of areaNameDomList) this.container.removeChild(a)
 
-            screen[0] = ( coord[0] - extent[0] ) * width / coordWidth;
-            screen[1] = (-coord[1] + extent[3] ) * height / coordHeight;
-
-            return screen;
-        } catch(e){
-            console.log(e);
-            return screen;
+        this.areaNameList = areaList.slice()
+        for (let area of this.areaNameList) {
+            let areaNameDom = this.areaNameClone.cloneNode(true)
+            areaNameDom.innerText = area.name
+            area.dom = areaNameDom
+            this.container.appendChild(areaNameDom)
         }
-    };
+    }
+
+    renderHoverText(text = '', coord) {
+        let labelDom = this.container.querySelector(`.${styles.label}`)
+        if (labelDom) this.container.removeChild(labelDom)
+
+        if (text) {
+            const pos = this.map.transformCoordToPixel(coord)
+            labelDom = this.labelClone.cloneNode(true)
+            labelDom.innerHTML = text
+            labelDom.style.left = pos[0] + 'px'
+            labelDom.style.top = pos[1] + 'px'
+            this.container.appendChild(labelDom)
+        }
+    }
 }
 
-export default DOMLayer;
-
+export default DOMLayer

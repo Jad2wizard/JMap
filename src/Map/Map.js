@@ -6,7 +6,7 @@ import OlLayer from './Layers/BaseMapLayer/OlLayer'
 import DOMLayer from './Layers/DOMLayer'
 import View from './View'
 import { tweenWrap, TWEEN } from './tween'
-import {lonDeltaDeg} from './utils';
+import { lonDeltaDeg } from './utils'
 import './preDefines'
 
 class Map {
@@ -115,41 +115,42 @@ class Map {
             TWEEN.update()
         }
 
-        animate();
+        animate()
     }
 
-    setExtent = newFitExtent => new Promise(resolve => {
-        tweenWrap(({
-            start: this.getExtent(),
-            end: newFitExtent,
-            delay: 500,
-            onUpdate: extent => {
-                this.baseLayer.view.fit(extent, {
-                    constrainResolution: false
-                })
-                this.emit('viewChange')
-            },
-            onEnd: resolve
-        }))
-    })
+    setExtent = newFitExtent =>
+        new Promise(resolve => {
+            tweenWrap({
+                start: this.getExtent(),
+                end: newFitExtent,
+                delay: 500,
+                onUpdate: extent => {
+                    this.baseLayer.view.fit(extent, {
+                        constrainResolution: false
+                    })
+                    this.emit('viewChange')
+                },
+                onEnd: resolve
+            })
+        })
 
-    transformCoordToPixel = (coord) => {
-        const screen = [0, 0];
-        const extent = this.getExtent();
+    transformCoordToPixel = coord => {
+        const screen = [0, 0]
+        const extent = this.getExtent()
         try {
-            const coordWidth = lonDeltaDeg(extent[0], extent[2]);
-            const coordHeight = Math.abs(extent[1] - extent[3]);
-            const {width, height} = this;
+            const coordWidth = lonDeltaDeg(extent[0], extent[2])
+            const coordHeight = Math.abs(extent[1] - extent[3])
+            const { width, height } = this
 
-            screen[0] = ( coord[0] - extent[0] ) * width / coordWidth;
-            screen[1] = (-coord[1] + extent[3] ) * height / coordHeight;
+            screen[0] = ((coord[0] - extent[0]) * width) / coordWidth
+            screen[1] = ((-coord[1] + extent[3]) * height) / coordHeight
 
-            return screen;
-        } catch(e){
-            console.log(e);
-            return screen;
+            return screen
+        } catch (e) {
+            console.log(e)
+            return screen
         }
-    };
+    }
 
     render() {
         this.emit('render')
@@ -174,7 +175,11 @@ class Map {
             updateText: t => (text = t)
         })
 
-        this.domLayer.render(text, mouseCoord)
+        this.domLayer.renderHoverText(text, mouseCoord)
+    }
+
+    renderAreaNames(areaList = []) {
+        this.domLayer.renderAreaNames(areaList)
     }
 }
 
