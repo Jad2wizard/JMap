@@ -33,7 +33,6 @@ export default class extends React.Component{
         // );
         this.Map.addLayer(
             new AreamapLayer({
-                container: this.mapDom,
                 map: this.Map
             })
         );

@@ -3,6 +3,7 @@
  */
 import THREE from '../three';
 import * as extent from 'ol/extent';
+import { fade, smoothstep } from './Math'
 
 export const initScene = () => {
     const scene = new THREE.Scene();
@@ -192,3 +193,36 @@ export const _fetch = (url) => {
         mode: 'cors'
     }).then(res => res.json());
 };
+
+const COLOR_RANGE = [
+    '#ff4600',
+    '#ffa100',
+    '#fefe00',
+    '#c9e971',
+    '#87cef9',
+]
+export const getColor = (value, colorRange = []) =>  {
+
+    colorRange = colorRange.length > 1 ? colorRange : COLOR_RANGE;
+
+    const colorList = colorRange.map(c => formatColor(c));
+    const weightList = colorList.map(() => 0);
+    const len = colorList.length;
+    const step = 1.0 / (len - 1)
+
+    weightList[0] = smoothstep(1 - step, 1, value)
+    for(let i = 1; i < len; ++i)
+        weightList[i] = fade(
+            (len - 1 - i - 1) * step,
+            (len - 1 - i + 1) * step,
+            value
+        )
+
+    let color = [0, 0, 0]
+    for(let i = 0; i < len; ++i)
+        color._add(
+            colorList[i]._mul(weightList[i])
+        )
+
+    return color
+}

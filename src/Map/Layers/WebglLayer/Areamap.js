@@ -5,8 +5,7 @@
 import THREE from './../../../three'
 import Base from './index'
 import { vertexShader, fragmentShader } from './shaders/Areamap'
-import { genGeoJsonPath, formatColor } from './../../utils'
-import { fade, smoothstep } from './../../Math'
+import { genGeoJsonPath, formatColor, getColor } from './../../utils'
 
 window.three = THREE
 class Areamap extends Base {
@@ -65,7 +64,7 @@ class Areamap extends Base {
                     ? (zone.value - minValue) / (maxValue - minValue)
                     : 1
 
-                const color = this.getColor(value)
+                const color = getColor(value)
                 const material = this.material.clone()
                 material.uniforms.uColor.value = color
                 material.needsUpdate = true
@@ -274,28 +273,6 @@ class Areamap extends Base {
     removeHover(material) {
         material.vertextShader = vertexShader
         material.fragmentShader = fragmentShader
-    }
-
-    getColor(value) {
-        const c1 = formatColor(0x87cef9)
-        const c2 = formatColor(0xc9e971)
-        const c3 = formatColor(0xfefe00)
-        const c4 = formatColor(0xffa100)
-        const c5 = formatColor(0xff4600)
-
-        const f1 = fade(-0.25, 0.25, value)
-        const f2 = fade(0, 0.5, value)
-        const f3 = fade(0.25, 0.75, value)
-        const f4 = fade(0.5, 1.0, value)
-        const f5 = smoothstep(0.75, 1.0, value)
-
-        const color = c1
-            ._mul(f1)
-            ._add(c2._mul(f2))
-            ._add(c3._mul(f3))
-            ._add(c4._mul(f4))
-            ._add(c5._mul(f5))
-        return color
     }
 }
 

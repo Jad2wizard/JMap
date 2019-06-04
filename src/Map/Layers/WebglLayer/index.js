@@ -18,11 +18,11 @@ class WebGLLayer {
         this.width = props.width || window.innerWidth
         this.height = props.height || window.innerHeight
 
-        this.container = props.container
-        if (!this.container) throw 'the container dom is undefined'
-
         this.map = props.map
         if (!this.map) throw 'the map is undefined'
+
+        this.container = props.container || this.map.target
+        if (!this.container) throw 'the container dom is undefined'
 
         this.camera = null
 
