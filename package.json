@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack --mode development",
     "prod": "webpack --mode production",
-    "dll": "webpack --config webpack.config.dll.js --mode production",
+    "dll": "webpack --config webpack.config.dll.js --mode development",
     "eslint": "git diff --name-status --cached head > diff.log && node scripts/precommit.js"
   },
   "author": "",

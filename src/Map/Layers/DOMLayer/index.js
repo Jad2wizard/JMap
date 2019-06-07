@@ -28,11 +28,10 @@ class DOMLayer {
              */
         ]
 
-        this.animate()
+        this.map.on('viewChange', this.updateAreaNamePos.bind(this))
     }
 
-    animate = () => {
-        requestAnimationFrame(this.animate)
+    updateAreaNamePos() {
         for (let area of this.areaNameList) {
             const pos = this.map.transformCoordToPixel(area.coord)
             const areaNameDom = area.dom

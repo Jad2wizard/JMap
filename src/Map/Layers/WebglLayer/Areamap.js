@@ -6,6 +6,7 @@ import THREE from './../../../three'
 import Base from './index'
 import { vertexShader, fragmentShader } from './shaders/Areamap'
 import { genGeoJsonPath, formatColor, getColor } from './../../utils'
+import ColorSlider from '../../components/ColorSlider'
 
 window.three = THREE
 class Areamap extends Base {
@@ -20,6 +21,18 @@ class Areamap extends Base {
         this.initZoom = 1
 
         this.resetExtent()
+
+        this.colorSlider = null
+        this.renderColorSlider()
+
+        this.maxValue = 1
+        this.minValue = 0
+    }
+
+    destructor() {
+        super.destructor()
+        if (this.colorSlider)
+            this.container.removeChild(this.colorSlider.element)
     }
 
     init() {
@@ -50,18 +63,29 @@ class Areamap extends Base {
         this.initZoom = this.camera.zoom
     }
 
+    renderColorSlider(colorRange) {
+        if (this.colorSlider)
+            this.container.removeChild(this.colorSlider.element)
+
+        this.colorSlider = new ColorSlider({
+            colorRange,
+            onUpdate: this.handleCursorChange
+        })
+        this.container.appendChild(this.colorSlider.element)
+    }
+
     async render(data = mockData) {
         this.resetExtent()
         this.clearAreas()
-        const maxValue = Math.max(...data.map(i => i.value || 1))
-        const minValue = Math.min(...data.map(i => i.value || 0))
+        // const maxValue = Math.max(...data.map(i => i.value || 1))
+        // const minValue = Math.min(...data.map(i => i.value || 0))
 
         const nameCoordList = []
 
         for (let zone of data) {
             if (zone.adcode) {
                 const value = zone.value
-                    ? (zone.value - minValue) / (maxValue - minValue)
+                    ? (zone.value - this.minValue) / (this.maxValue - this.minValue)
                     : 1
 
                 const color = getColor(value)
@@ -130,6 +154,9 @@ class Areamap extends Base {
         if (data.length > 0) this.fitExtent()
 
         this.map.renderAreaNames(nameCoordList)
+
+        if(this.colorSlider)
+            this.colorSlider.resetCursor()
     }
 
     fitExtent() {
@@ -221,6 +248,16 @@ class Areamap extends Base {
         }
     }
 
+    addHover(material) {
+        material.vertextShader = '#define HOVER\n' + vertexShader
+        material.fragmentShader = '#define HOVER\n' + fragmentShader
+    }
+
+    removeHover(material) {
+        material.vertextShader = vertexShader
+        material.fragmentShader = fragmentShader
+    }
+
     zoomHandling = false
     async handleZoom() {
         const zoom = this.map.getZoom()
@@ -265,14 +302,18 @@ class Areamap extends Base {
         }
     }
 
-    addHover(material) {
-        material.vertextShader = '#define HOVER\n' + vertexShader
-        material.fragmentShader = '#define HOVER\n' + fragmentShader
-    }
+    handleCursorChange = (max, min) => {
+        const { maxValue, minValue } = this
+        max = max * (maxValue - minValue) + minValue
+        min = min * (maxValue - minValue) + minValue
 
-    removeHover(material) {
-        material.vertextShader = vertexShader
-        material.fragmentShader = fragmentShader
+        this.areaList.children.forEach(area => {
+            if (area.value > max || area.value < min) {
+                area.visible = false
+            } else {
+                area.visible = true
+            }
+        })
     }
 }
 

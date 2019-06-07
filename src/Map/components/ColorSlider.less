@@ -1,0 +1,37 @@
+.container {
+  position: fixed;
+  display: flex;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.text{
+  color: #e8e8e8;
+  line-height: 2em;
+  user-select: none;
+}
+
+.canvas{
+  cursor: row-resize;
+}
+
+.top,.bottom{
+  width: 0;
+  height: 0;
+  left: -5px;
+  position: absolute;
+  border-style: solid;
+  border-color: transparent transparent transparent #f7f7f7;
+}
+
+.top{
+  border-width: 15px 0px 0px 15px;
+}
+
+.bottom{
+  border-width: 0px 0px 15px 15px;
+}
